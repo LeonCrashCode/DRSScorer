@@ -4,7 +4,7 @@ from collections import Counter
 
 import sys
 import time
-N = 4
+N = 5
 M = 4
 def readitems(filename):
 	lines = [[]]
@@ -37,14 +37,15 @@ def corpus_score(hyps, refs):
 		p_denominators += p
 		r_denominators += r
 
-	print(numerators)
-	print(p_denominators)
-	print(r_denominators)
-	p = numerators*1.0 / p_denominators
-	r = numerators*1.0 / r_denominators
-	f1 = 2 * p * r / (p+r)
+	return numerators, p_denominators, r_denominators
+	# print(numerators)
+	# print(p_denominators)
+	# print(r_denominators)
+	# p = numerators*1.0 / p_denominators
+	# r = numerators*1.0 / r_denominators
+	# f1 = 2 * p * r / (p+r)
 
-	return p, r, f1
+	# return p, r, f1
 
 def modified_f1(hyp, ref, i):
 	
@@ -66,7 +67,11 @@ def modified_f1(hyp, ref, i):
 	return numerator, pdenominator, rdenominator
 
 
-
+def get_f1(numerators, p_denominators, r_denominators):
+	p = numerators*1.0 / p_denominators
+	r = numerators*1.0 / r_denominators
+	f1 = 2 * p * r / (p+r)
+	return p, r, f1
 if __name__ == "__main__":
 	hyps = readitems(sys.argv[1])
 	refs = readitems(sys.argv[2])
@@ -80,23 +85,31 @@ if __name__ == "__main__":
 		print(i)
 		start_time = time.time()
 		extractor = extractors[i]
-		hyp_ngrams = []
-		ref_ngrams = []
+		
+		numerators = 0
+		p_denominators = 0
+		r_denominators = 0
 		for j, (hyp, ref) in enumerate(zip(hyps, refs)):
 			print(j)
+			hyp_ngrams = []
+			ref_ngrams = []
+
 			g_hyp.from_tuples(hyp)
 			g_ref.from_tuples(ref)
 
-			hyp_ngrams.append([])
-			ref_ngrams.append([])
-
 			# g_hyp.shows()
-			extractor.extract_ngram(g_hyp, hyp_ngrams[-1])
-			extractor.extract_ngram(g_ref, ref_ngrams[-1])
+			extractor.extract_ngram(g_hyp, hyp_ngrams)
+			extractor.extract_ngram(g_ref, ref_ngrams)
 			# p, r, f = sentence_score(hyp_ngrams[-1], ref_ngrams[-1])
 			# print(p,r,f)
 			# exit(-1)
-		p, r, f = corpus_score(hyp_ngrams, ref_ngrams)
+			n, p, r = sentence_score(hyp_ngrams, ref_ngrams)
+
+			numerators += n
+			p_denominators += p
+			r_denominators += r
+
+		p, r, f = get_f1(numerators, p_denominators, r_denominators)
 		elapsed_time = time.time() - start_time
 		print(p, r, f, elapsed_time)
 		
