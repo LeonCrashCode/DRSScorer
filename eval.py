@@ -1,8 +1,9 @@
 from graph import Graph, Graph2
 from extract_ngram import Extractor
 from collections import Counter
-import sys
 
+import sys
+import time
 N = 4
 M = 4
 def readitems(filename):
@@ -76,10 +77,11 @@ if __name__ == "__main__":
 
 	
 	for i in range(N):
+		print(i)
+		start_time = time.time()
 		extractor = extractors[i]
 		hyp_ngrams = []
 		ref_ngrams = []
-		print(i)
 		for j, (hyp, ref) in enumerate(zip(hyps, refs)):
 			print(j)
 			g_hyp.from_tuples(hyp)
@@ -95,7 +97,8 @@ if __name__ == "__main__":
 			# print(p,r,f)
 			# exit(-1)
 		p, r, f = corpus_score(hyp_ngrams, ref_ngrams)
-		print(p, r, f)
-		exit(-1)
+		elapsed_time = time.time() - start_time
+		print(p, r, f, elapsed_time)
+		
 
 
