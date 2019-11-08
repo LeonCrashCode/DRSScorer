@@ -107,8 +107,8 @@ class Graph2:
 				self.edges[fr].append("$TO$"+t[1]+"$ARG")
 
 				if not t[1].isupper():
-					self.nodes[to].append(fr)
-					self.edges[to].append("$FR$"+t[1]+"$ARG")
+					# self.nodes[to].append(fr)
+					# self.edges[to].append("$FR$"+t[1]+"$ARG")
 					pass
 			if len(t) == 4:
 				fr = variable_to_node_index[t[0]]
@@ -120,10 +120,79 @@ class Graph2:
 				self.edges[to1].append("$TO$"+t[1]+"$ARG2")
 
 				if not t[1].isupper():
-					self.nodes[to1].append(fr)
-					self.edges[to1].append("$FR$"+t[1]+"$ARG1")
-					self.nodes[to2].append(to1)
-					self.edges[to2].append("$FR$"+t[1]+"$ARG2")
+					# self.nodes[to1].append(fr)
+					# self.edges[to1].append("$FR$"+t[1]+"$ARG1")
+					# self.nodes[to2].append(to1)
+					# self.edges[to2].append("$FR$"+t[1]+"$ARG2")
+					pass
+
+
+	def shows(self):
+		print(self.node_index_to_variable)
+		for nodes in self.nodes:
+			print(nodes)
+		for edges in self.edges:
+			print(edges)
+
+class Graph2:
+
+	def __init__(self):
+		pass
+
+	def from_tuples(self, items: list):
+
+		variable_to_node_index = {}
+		node_index_to_variable = []
+		for t in items:
+			t = t.split()
+			assert len(t) == 3 or len(t) == 4
+			if t[1] == "EQU":
+				t[1] = "Equ"
+			if t[0] not in variable_to_node_index:
+				variable_to_node_index[t[0]] = len(node_index_to_variable)
+				node_index_to_variable.append(t[0])
+			if t[2] not in variable_to_node_index:
+				variable_to_node_index[t[2]] = len(node_index_to_variable)
+				node_index_to_variable.append(t[2])
+			if len(t) == 4 and t[3] not in variable_to_node_index:
+				variable_to_node_index[t[3]] = len(node_index_to_variable)
+				node_index_to_variable.append(t[3])
+
+		self.variable_to_node_index = variable_to_node_index
+		self.node_index_to_variable = node_index_to_variable
+
+		self.nodes = [ [] for i in range(len(node_index_to_variable))]
+		self.edges = [ [] for i in range(len(node_index_to_variable))]
+
+		for t in items:
+			t = t.split()
+			assert len(t) == 3 or len(t) == 4
+			if t[1] == "EQU":
+				t[1] = "Equ"
+			if len(t) == 3:
+				fr = variable_to_node_index[t[0]]
+				to = variable_to_node_index[t[2]]
+				self.nodes[fr].append(to)
+				self.edges[fr].append("$TO$"+t[1]+"$ARG")
+
+				if not t[1].isupper():
+					# self.nodes[to].append(fr)
+					# self.edges[to].append("$FR$"+t[1]+"$ARG")
+					pass
+			if len(t) == 4:
+				fr = variable_to_node_index[t[0]]
+				to1 = variable_to_node_index[t[2]]
+				to2 = variable_to_node_index[t[3]]
+				self.nodes[fr].append(to1)
+				self.edges[fr].append("$TO$"+t[1]+"$ARG1")
+				self.nodes[to1].append(to2)
+				self.edges[to1].append("$TO$"+t[1]+"$ARG2")
+
+				if not t[1].isupper():
+					# self.nodes[to1].append(fr)
+					# self.edges[to1].append("$FR$"+t[1]+"$ARG1")
+					# self.nodes[to2].append(to1)
+					# self.edges[to2].append("$FR$"+t[1]+"$ARG2")
 					pass
 
 

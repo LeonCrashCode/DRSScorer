@@ -7,7 +7,7 @@ import sys
 import time
 N = 5
 M = 4
-ncpu = 2
+ncpu = 1
 def readitems(filename):
 	lines = [[]]
 	for line in open(filename):
