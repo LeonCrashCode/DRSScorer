@@ -32,8 +32,8 @@ class Extractor:
 
 	def traversal(self, state):
 		i, step, struct_step = state[:3]
-		if step == self.ngram or struct_step == self.struct_ngram:
-		#if step + struct_step == self.ngram:
+		#if step == self.ngram or struct_step == self.struct_ngram:
+		if step + struct_step == self.ngram:
 			self.paths.append(" ".join(state[-1]))
 			return 
 
