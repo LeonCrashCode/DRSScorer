@@ -5,7 +5,8 @@ from collections import Counter
 import multiprocessing
 import sys
 import time
-N = 5
+import math
+N = 4
 M = 4
 ncpu = 1
 def readitems(filename):
@@ -70,9 +71,11 @@ def modified_f1(hyp, ref, i):
 
 
 def get_f1(numerators, p_denominators, r_denominators):
-	p = numerators*1.0 / p_denominators
-	r = numerators*1.0 / r_denominators
-	f1 = 2 * p * r / (p+r)
+	if p_denominators == 0 and r_denominators == 0:
+		return "skip", "skip", "skip"
+	p = numerators*1.0 / p_denominators if p_denominators != 0 else 0
+	r = numerators*1.0 / r_denominators if r_denominators != 0 else 0
+	f1 = 2 * p * r / (p+r) if p + r != 0 else 0
 	return p, r, f1
 
 def worker(procnum, hyps, refs, extractor, return_dict):
@@ -93,6 +96,7 @@ def worker(procnum, hyps, refs, extractor, return_dict):
 		# g_hyp.shows()
 		extractor.extract_ngram(g_hyp, hyp_ngrams)
 		extractor.extract_ngram(g_ref, ref_ngrams)
+		
 		# p, r, f = sentence_score(hyp_ngrams[-1], ref_ngrams[-1])
 		# print(p,r,f)
 		# exit(-1)
@@ -108,48 +112,74 @@ if __name__ == "__main__":
 	hyps = readitems(sys.argv[1])
 	refs = readitems(sys.argv[2])
 
+	# extractors = []
+	# for i in range(N+1):
+	# 	for j in range(M+1):
+	# 		if i + j == 0:
+	# 			continue
+	# 		extractors.append(Extractor(i, j))
 	extractors = [Extractor(i+1, M) for i in range(N)]
+	if ncpu == 1:
+		sumlog = 0
+		for i in range(N):
 
-	bin_size = int(len(hyps) / ncpu)
-	if len(hyps) % ncpu != 0:
-		bin_size += 1
-	print(bin_size)
-	hyps_p = []
-	refs_p = []
-	for i in range(ncpu):
-		hyps_p.append(hyps[i*bin_size:(i+1)*bin_size])
-		refs_p.append(refs[i*bin_size:(i+1)*bin_size])
+			start_time = time.time()
+			extractor = extractors[i]
 
-	for i in range(N):
-		print(i)
-		start_time = time.time()
-		extractor = extractors[i]
-		
-		numerators = 0
-		p_denominators = 0
-		r_denominators = 0
+			return_dict = {}
+			worker(0, hyps, refs, extractor, return_dict)
+			numerators = return_dict[0][0]
+			p_denominators = return_dict[0][1]
+			r_denominators = return_dict[0][2]
 
-		manager = multiprocessing.Manager()
-		return_dict = manager.dict()
+			p, r, f = get_f1(numerators, p_denominators, r_denominators)
+			elapsed_time = time.time() - start_time
+			print(p, r, f)#, elapsed_time)
+			sumlog += math.log(f if f != 0 else 1e-3)
 
-		jobs = []
-		for j in range(ncpu):
-			p = multiprocessing.Process(target=worker, args=(j, hyps_p[j], refs_p[j], extractor, return_dict))
-			jobs.append(p)
-			p.start()
+		sumlog /= N
+		print(math.exp(sumlog))
+	else:
+		bin_size = int(len(hyps) / ncpu)
+		if len(hyps) % ncpu != 0:
+			bin_size += 1
+		print(bin_size)
+		hyps_p = []
+		refs_p = []
+		for i in range(ncpu):
+			hyps_p.append(hyps[i*bin_size:(i+1)*bin_size])
+			refs_p.append(refs[i*bin_size:(i+1)*bin_size])
 
-		for proc in jobs:
-			proc.join()
+		for i in range(N):
+			print(i)
+			start_time = time.time()
+			extractor = extractors[i]
+			
+			numerators = 0
+			p_denominators = 0
+			r_denominators = 0
+
+			manager = multiprocessing.Manager()
+			return_dict = manager.dict()
+
+			jobs = []
+			for j in range(ncpu):
+				p = multiprocessing.Process(target=worker, args=(j, hyps_p[j], refs_p[j], extractor, return_dict))
+				jobs.append(p)
+				p.start()
+
+			for proc in jobs:
+				proc.join()
 
 
-		for j in range(ncpu):
-			numerators += return_dict[j][0]
-			p_denominators += return_dict[j][1]
-			r_denominators += return_dict[j][2]
+			for j in range(ncpu):
+				numerators += return_dict[j][0]
+				p_denominators += return_dict[j][1]
+				r_denominators += return_dict[j][2]
 
-		p, r, f = get_f1(numerators, p_denominators, r_denominators)
-		elapsed_time = time.time() - start_time
-		print(p, r, f, elapsed_time)
+			p, r, f = get_f1(numerators, p_denominators, r_denominators)
+			elapsed_time = time.time() - start_time
+			print(p, r, f, elapsed_time)
 
 		
 

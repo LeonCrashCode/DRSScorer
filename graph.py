@@ -107,8 +107,8 @@ class Graph2:
 				self.edges[fr].append("$TO$"+t[1]+"$ARG")
 
 				if not t[1].isupper():
-					# self.nodes[to].append(fr)
-					# self.edges[to].append("$FR$"+t[1]+"$ARG")
+					self.nodes[to].append(fr)
+					self.edges[to].append("$FR$"+t[1]+"$ARG")
 					pass
 			if len(t) == 4:
 				fr = variable_to_node_index[t[0]]
@@ -120,10 +120,10 @@ class Graph2:
 				self.edges[to1].append("$TO$"+t[1]+"$ARG2")
 
 				if not t[1].isupper():
-					# self.nodes[to1].append(fr)
-					# self.edges[to1].append("$FR$"+t[1]+"$ARG1")
-					# self.nodes[to2].append(to1)
-					# self.edges[to2].append("$FR$"+t[1]+"$ARG2")
+					self.nodes[to1].append(fr)
+					self.edges[to1].append("$FR$"+t[1]+"$ARG1")
+					self.nodes[to2].append(to1)
+					self.edges[to2].append("$FR$"+t[1]+"$ARG2")
 					pass
 
 
