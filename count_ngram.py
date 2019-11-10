@@ -26,7 +26,7 @@ def worker(procnum, refs, extractor):
 		ref_ngrams = []
 		g_ref.from_tuples(ref)
 		extractor.extract_ngram(g_ref, ref_ngrams)
-		print(len(g_ref.node_index_to_variable), len(ref_ngrams))
+		print(len(g_ref.node_index_to_variable), g_ref.edge_num, len(ref_ngrams))
 
 if __name__ == "__main__":
 	refs = readitems(sys.argv[1])
