@@ -16,7 +16,7 @@ class Extractor:
 		self.paths = paths
 		for i in range(self.length):
 			v = self.g.node_index_to_variable[i]
-			if is_constant(v)
+			if is_constant(v):
 				state = [i, 0, 0, set([i]), [v]]
 			else:
 				if self.type:
