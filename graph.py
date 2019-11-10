@@ -95,6 +95,7 @@ class Graph2:
 		self.nodes = [ [] for i in range(len(node_index_to_variable))]
 		self.edges = [ [] for i in range(len(node_index_to_variable))]
 
+		self.edge_num = 0
 		for t in items:
 			t = t.split()
 			assert len(t) == 3 or len(t) == 4
@@ -105,10 +106,11 @@ class Graph2:
 				to = variable_to_node_index[t[2]]
 				self.nodes[fr].append(to)
 				self.edges[fr].append("$TO$"+t[1]+"$ARG")
-
+				self.edge_num += 1
 				if not t[1].isupper():
 					self.nodes[to].append(fr)
 					self.edges[to].append("$FR$"+t[1]+"$ARG")
+					self.edge_num += 1
 					pass
 			if len(t) == 4:
 				fr = variable_to_node_index[t[0]]
@@ -118,12 +120,13 @@ class Graph2:
 				self.edges[fr].append("$TO$"+t[1]+"$ARG1")
 				self.nodes[to1].append(to2)
 				self.edges[to1].append("$TO$"+t[1]+"$ARG2")
-
+				self.edge_num += 2
 				if not t[1].isupper():
 					self.nodes[to1].append(fr)
 					self.edges[to1].append("$FR$"+t[1]+"$ARG1")
 					self.nodes[to2].append(to1)
 					self.edges[to2].append("$FR$"+t[1]+"$ARG2")
+					self.edge_num += 2
 					pass
 
 
