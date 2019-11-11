@@ -86,7 +86,7 @@ def worker(procnum, hyps, refs, extractor, return_dict):
 	p_denominators = 0
 	r_denominators = 0
 	for j, (hyp, ref) in enumerate(zip(hyps, refs)):
-		print(procnum, j)
+		#print(procnum, j)
 		hyp_ngrams = []
 		ref_ngrams = []
 
@@ -119,8 +119,12 @@ if __name__ == "__main__":
 	# 			continue
 	# 		extractors.append(Extractor(i, j))
 	extractors = [Extractor(i+1, M) for i in range(N)]
+	sumlog_f = 0
+	sumlog_p = 0
+	sumlog_r = 0
+	all_time = 0
 	if ncpu == 1:
-		sumlog = 0
+		
 		for i in range(N):
 
 			start_time = time.time()
@@ -134,16 +138,15 @@ if __name__ == "__main__":
 
 			p, r, f = get_f1(numerators, p_denominators, r_denominators)
 			elapsed_time = time.time() - start_time
-			print(p, r, f)#, elapsed_time)
-			sumlog += math.log(f if f != 0 else 1e-3)
-
-		sumlog /= N
-		print(math.exp(sumlog))
+			all_time += elapsed_time
+			print(p, r, f, elapsed_time)
+			sumlog_f += math.log(f if f != 0 else 1e-3)
+			sumlog_p += math.log(p if p != 0 else 1e-3)
+			sumlog_r += math.log(r if r != 0 else 1e-3)
 	else:
 		bin_size = int(len(hyps) / ncpu)
 		if len(hyps) % ncpu != 0:
 			bin_size += 1
-		print(bin_size)
 		hyps_p = []
 		refs_p = []
 		for i in range(ncpu):
@@ -151,7 +154,6 @@ if __name__ == "__main__":
 			refs_p.append(refs[i*bin_size:(i+1)*bin_size])
 
 		for i in range(N):
-			print(i)
 			start_time = time.time()
 			extractor = extractors[i]
 			
@@ -179,7 +181,16 @@ if __name__ == "__main__":
 
 			p, r, f = get_f1(numerators, p_denominators, r_denominators)
 			elapsed_time = time.time() - start_time
+			all_time += elapsed_time
 			print(p, r, f, elapsed_time)
+			sumlog_f += math.log(f if f != 0 else 1e-3)
+			sumlog_p += math.log(p if p != 0 else 1e-3)
+			sumlog_r += math.log(r if r != 0 else 1e-3)
+	
+	sumlog_f /= N
+	sumlog_p /= N
+	sumlog_r /= N
+	print(math.exp(sumlog_p), math.exp(sumlog_r), math.exp(sumlog_f), all_time)
 
 		
 
