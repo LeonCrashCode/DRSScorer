@@ -1,14 +1,26 @@
 from graph import Graph, Graph2
 from extract_ngram import Extractor
 from collections import Counter
-
+from wordnet_dict_en import en_sense_dict
 import multiprocessing
 import sys
 import time
 import math
-N = 4
+N = int(sys.argv[3])
+
+weights = []
+for item in sys.argv[4:]:
+	weights.append(float(item))
+
+assert len(weights) == N
 M = 4
 ncpu = 1
+
+def rewrite(line):
+	line = line.split()
+	if len(line) == 3:
+		line[1] = en_sense_dict.get(line[1], line[1])
+	return " ".join(line)
 def readitems(filename):
 	lines = [[]]
 	for line in open(filename):
@@ -16,7 +28,12 @@ def readitems(filename):
 		if line == "":
 			lines.append([])
 		else:
-			lines[-1].append(line)
+			line = rewrite(line)
+			if line not in lines[-1]:
+				lines[-1].append(line)
+
+	if len(lines[-1]) == 0:
+		lines.pop()
 	return lines
 
 def sentence_score(hyp, ref):
@@ -56,16 +73,18 @@ def modified_f1(hyp, ref, i):
 	ref_count = Counter(ref)
 
 
+	# print(hyp_count)
+	# print(ref_count)
 	ngrams = list(hyp_count.keys() | ref_count.keys())
 
 	clipped_counts = {
 		ngram: min(hyp_count.get(ngram, 0), ref_count.get(ngram, 0)) for ngram in ngrams
 	}
 
+	# print(clipped_counts)
 	numerator = sum(clipped_counts.values())
-	pdenominator = max(1, sum(hyp_count.values()))
-	rdenominator = max(1, sum(ref_count.values()))
-
+	pdenominator = max(0, sum(hyp_count.values()))
+	rdenominator = max(0, sum(ref_count.values()))
 
 	return numerator, pdenominator, rdenominator
 
@@ -96,7 +115,10 @@ def worker(procnum, hyps, refs, extractor, return_dict):
 		# g_hyp.shows()
 		extractor.extract_ngram(g_hyp, hyp_ngrams)
 		extractor.extract_ngram(g_ref, ref_ngrams)
-		
+
+		#print(hyp_ngrams)
+		#print(ref_ngrams)
+
 		# p, r, f = sentence_score(hyp_ngrams[-1], ref_ngrams[-1])
 		# print(p,r,f)
 		# exit(-1)
@@ -123,6 +145,11 @@ if __name__ == "__main__":
 	sumlog_p = 0
 	sumlog_r = 0
 	all_time = 0
+
+	Numerators = [0 for i in range(N)]
+	p_Denominators = [0 for i in range(N)]
+	r_Denominators = [0 for i in range(N)]
+
 	if ncpu == 1:
 		
 		for i in range(N):
@@ -136,13 +163,13 @@ if __name__ == "__main__":
 			p_denominators = return_dict[0][1]
 			r_denominators = return_dict[0][2]
 
-			p, r, f = get_f1(numerators, p_denominators, r_denominators)
+			Numerators[i] = numerators
+			p_Denominators[i] = p_denominators
+			r_Denominators[i] = r_denominators
+
 			elapsed_time = time.time() - start_time
 			all_time += elapsed_time
-			print(p, r, f, elapsed_time)
-			sumlog_f += math.log(f if f != 0 else 1e-3)
-			sumlog_p += math.log(p if p != 0 else 1e-3)
-			sumlog_r += math.log(r if r != 0 else 1e-3)
+			print(i+1, "grams time:", elapsed_time)
 	else:
 		bin_size = int(len(hyps) / ncpu)
 		if len(hyps) % ncpu != 0:
@@ -179,18 +206,47 @@ if __name__ == "__main__":
 				p_denominators += return_dict[j][1]
 				r_denominators += return_dict[j][2]
 
-			p, r, f = get_f1(numerators, p_denominators, r_denominators)
+			Numerators[i] = numerators
+			p_Denominators[i] = p_denominators
+			r_Denominators[i] = r_denominators
+
 			elapsed_time = time.time() - start_time
 			all_time += elapsed_time
-			print(p, r, f, elapsed_time)
-			sumlog_f += math.log(f if f != 0 else 1e-3)
-			sumlog_p += math.log(p if p != 0 else 1e-3)
-			sumlog_r += math.log(r if r != 0 else 1e-3)
+			print(i+1, "grams time:", elapsed_time)
+
+	max_N = 0
+
+	sumlog_f = [0 for i in range(N)]
+	sumlog_p = [0 for i in range(N)]
+	sumlog_r = [0 for i in range(N)]
+	for i in range(N):
+		if r_Denominators[i] == 0:
+			continue
+		else:
+			max_N += 1
+			p, r, f = get_f1(Numerators[i], p_Denominators[i], r_Denominators[i])
+			print(i+1, "grams score:", p, r, f)
+			sumlog_f[i] += math.log(f if f != 0 else 1e-3)
+			sumlog_p[i] += math.log(p if p != 0 else 1e-3)
+			sumlog_r[i] += math.log(r if r != 0 else 1e-3)
 	
-	sumlog_f /= N
-	sumlog_p /= N
-	sumlog_r /= N
-	print(math.exp(sumlog_p), math.exp(sumlog_r), math.exp(sumlog_f), all_time)
+	i = 0
+	while i < max_N:
+		j = max_N
+		while j < N:
+			weights[i] += weights[j] / (N-max_N)
+			j += 1
+		i += 1
+
+	final_f = 0
+	final_p = 0
+	final_r = 0
+	for i in range(max_N):
+		final_f += weights[i] * sumlog_f[i]
+		final_p += weights[i] * sumlog_p[i]
+		final_r += weights[i] * sumlog_r[i]
+
+	print(math.exp(final_p), math.exp(final_r), math.exp(final_f), all_time)
 
 		
 

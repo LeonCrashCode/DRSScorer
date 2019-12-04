@@ -107,7 +107,8 @@ class Graph2:
 				self.nodes[fr].append(to)
 				self.edges[fr].append("$TO$"+t[1]+"$ARG")
 				self.edge_num += 1
-				if not t[1].isupper():
+				if True:
+				#if not t[1].isupper():
 					self.nodes[to].append(fr)
 					self.edges[to].append("$FR$"+t[1]+"$ARG")
 					self.edge_num += 1
@@ -121,7 +122,8 @@ class Graph2:
 				self.nodes[to1].append(to2)
 				self.edges[to1].append("$TO$"+t[1]+"$ARG2")
 				self.edge_num += 2
-				if not t[1].isupper():
+				if True:
+				#if not t[1].isupper():
 					self.nodes[to1].append(fr)
 					self.edges[to1].append("$FR$"+t[1]+"$ARG1")
 					self.nodes[to2].append(to1)
