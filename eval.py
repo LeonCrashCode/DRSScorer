@@ -138,7 +138,6 @@ if __name__ == "__main__":
 	for hyp in hyps:
 		d = {}
 		for clause in hyp:
-			print(clause)
 			clause = clause.split()
 			if clause[0] not in d:
 				d[clause[0]] = 1
@@ -151,7 +150,6 @@ if __name__ == "__main__":
 	for ref in refs:
 		d = {}
 		for clause in ref:
-			print(clause)
 			clause = clause.split()
 			if clause[0] not in d:
 				d[clause[0]] = 1
@@ -159,9 +157,6 @@ if __name__ == "__main__":
 				if item not in d:
 					d[item] = 1
 		gram_refs += len(d.keys())
-
-	print(gram_hyps, gram_refs)
-	
 
 	# extractors = []
 	# for i in range(N+1):
@@ -274,6 +269,7 @@ if __name__ == "__main__":
 		final_f += weights[i] * sumlog_f[i]
 		final_p += weights[i] * sumlog_p[i]
 		final_r += weights[i] * sumlog_r[i]
+
 	final_p += weights[-1] * math.log(min(gram_refs, gram_hyps) / max(gram_refs, gram_hyps))
 	final_r += weights[-1] * math.log(min(gram_refs, gram_hyps) / max(gram_refs, gram_hyps))
 	final_f += weights[-1] * math.log(min(gram_refs, gram_hyps) / max(gram_refs, gram_hyps))
