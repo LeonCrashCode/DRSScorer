@@ -12,7 +12,7 @@ weights = []
 for item in sys.argv[4:]:
 	weights.append(float(item))
 
-assert len(weights) == N
+assert len(weights) == N+1
 M = 4
 ncpu = 1
 
@@ -134,6 +134,35 @@ if __name__ == "__main__":
 	hyps = readitems(sys.argv[1])
 	refs = readitems(sys.argv[2])
 
+	gram_hyps = 0.0
+	for hyp in hyps:
+		d = {}
+		for clause in hyp:
+			print(clause)
+			clause = clause.split()
+			if clause[0] not in d:
+				d[clause[0]] = 1
+			for item in clause[2:]:
+				if item not in d:
+					d[item] = 1
+		gram_hyps += len(d.keys())
+
+	gram_refs = 0.0
+	for ref in refs:
+		d = {}
+		for clause in ref:
+			print(clause)
+			clause = clause.split()
+			if clause[0] not in d:
+				d[clause[0]] = 1
+			for item in clause[2:]:
+				if item not in d:
+					d[item] = 1
+		gram_refs += len(d.keys())
+
+	print(gram_hyps, gram_refs)
+	
+
 	# extractors = []
 	# for i in range(N+1):
 	# 	for j in range(M+1):
@@ -245,6 +274,9 @@ if __name__ == "__main__":
 		final_f += weights[i] * sumlog_f[i]
 		final_p += weights[i] * sumlog_p[i]
 		final_r += weights[i] * sumlog_r[i]
+	final_p += weights[-1] * math.log(min(gram_refs, gram_hyps) / max(gram_refs, gram_hyps))
+	final_r += weights[-1] * math.log(min(gram_refs, gram_hyps) / max(gram_refs, gram_hyps))
+	final_f += weights[-1] * math.log(min(gram_refs, gram_hyps) / max(gram_refs, gram_hyps))
 
 	print(math.exp(final_p), math.exp(final_r), math.exp(final_f), all_time)
 
