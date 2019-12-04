@@ -134,8 +134,10 @@ if __name__ == "__main__":
 	hyps = readitems(sys.argv[1])
 	refs = readitems(sys.argv[2])
 
-	gram_hyps = 0.0
-	for hyp in hyps:
+
+	zero_grams = 0.0
+	for hyp, ref in zip(hyps, refs):
+		gram_hyps = 0.0
 		d = {}
 		for clause in hyp:
 			clause = clause.split()
@@ -146,8 +148,7 @@ if __name__ == "__main__":
 					d[item] = 1
 		gram_hyps += len(d.keys())
 
-	gram_refs = 0.0
-	for ref in refs:
+		gram_refs = 0.0
 		d = {}
 		for clause in ref:
 			clause = clause.split()
@@ -157,6 +158,10 @@ if __name__ == "__main__":
 				if item not in d:
 					d[item] = 1
 		gram_refs += len(d.keys())
+
+		zero_grams += min(gram_refs, gram_hyps) / max(gram_refs, gram_hyps)
+
+	zero_grams /= len(hyps)
 
 	# extractors = []
 	# for i in range(N+1):
@@ -270,9 +275,9 @@ if __name__ == "__main__":
 		final_p += weights[i] * sumlog_p[i]
 		final_r += weights[i] * sumlog_r[i]
 
-	final_p += weights[-1] * math.log(min(gram_refs, gram_hyps) / max(gram_refs, gram_hyps))
-	final_r += weights[-1] * math.log(min(gram_refs, gram_hyps) / max(gram_refs, gram_hyps))
-	final_f += weights[-1] * math.log(min(gram_refs, gram_hyps) / max(gram_refs, gram_hyps))
+	final_p += weights[-1] * math.log(zero_grams)
+	final_r += weights[-1] * math.log(zero_grams)
+	final_f += weights[-1] * math.log(zero_grams)
 
 	print(math.exp(final_p), math.exp(final_r), math.exp(final_f), all_time)
 
