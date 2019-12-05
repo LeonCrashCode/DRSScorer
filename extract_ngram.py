@@ -39,7 +39,7 @@ class Extractor:
 
 		for n, e in zip(self.g.nodes[i], self.g.edges[i]):
 
-			act = str(i)+"_"+str(n)+e
+			act = str(i)+"_"+str(n)+"_"+e
 			act = n
 			if act in state[-2]:
 				continue

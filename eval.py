@@ -162,8 +162,7 @@ if __name__ == "__main__":
 		zero_grams += min(gram_refs, gram_hyps) / max(gram_refs, gram_hyps)
 
 	zero_grams /= len(hyps)
-	print(zero_grams)
-	exit(-1)
+	
 	# extractors = []
 	# for i in range(N+1):
 	# 	for j in range(M+1):
